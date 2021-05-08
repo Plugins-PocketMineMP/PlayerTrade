@@ -1,0 +1,10 @@
+name: PlayerTrade
+author: alvin0319
+main: alvin0319\PlayerTrade\PlayerTrade
+version: 1.0.0
+api: 3.0.0
+
+permissions:
+  playertrade.command:
+    description: Allows player to use /trade command
+    default: true
