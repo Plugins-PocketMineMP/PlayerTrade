@@ -16,7 +16,6 @@ use pocketmine\scheduler\TaskHandler;
 use function array_merge;
 use function count;
 use function in_array;
-use function var_dump;
 
 final class TradeQueue{
 
@@ -225,8 +224,6 @@ final class TradeQueue{
 	public function syncWith() : void{
 		$greenItem = ItemFactory::get(ItemIds::TERRACOTTA, 13);
 		$greenItem->setCustomName("§aDone!");
-		var_dump($this->isSenderDone);
-		var_dump($this->isReceiverDone);
 		foreach(self::SENDER_SLOTS as $slot){
 			$senderItem = $this->senderMenu->getInventory()->getItem($slot);
 			$receiverItem = $this->receiverMenu->getInventory()->getItem($slot);
