@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace alvin0319\PlayerTrade;
 
+use alvin0319\PlayerTrade\event\TradeEndEvent;
+use alvin0319\PlayerTrade\event\TradeStartEvent;
 use alvin0319\PlayerTrade\task\TradeQueueCheckTask;
 use Closure;
 use muqsit\invmenu\InvMenu;
@@ -86,6 +88,14 @@ final class TradeQueue{
 		if(!$this->sender->isOnline() || !$this->receiver->isOnline()){
 			return;
 		}
+
+		$ev = new TradeStartEvent($this->sender, $this->receiver);
+		$ev->call();
+		if($ev->isCancelled()){
+			$this->removeFrom();
+			return;
+		}
+
 		$this->senderMenu->send($this->sender);
 		$this->receiverMenu->send($this->receiver);
 
@@ -101,6 +111,7 @@ final class TradeQueue{
 	}
 
 	public function done() : void{
+		$plugin = PlayerTrade::getInstance();
 		$this->done = true;
 		$senderRemains = [];
 		$receiverRemains = [];
@@ -117,24 +128,26 @@ final class TradeQueue{
 			}
 		}
 		if(count($senderRemains) > 0){
-			$this->sender->sendMessage(PlayerTrade::$prefix . "Your inventory is full!");
+			$this->sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.inventoryFull"));
 			foreach($senderRemains as $remain)
 				$this->sender->dropItem($remain);
 		}
 		if(count($receiverRemains) > 0){
-			$this->receiver->sendMessage(PlayerTrade::$prefix . "Your inventory is full!");
+			$this->receiver->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.inventoryFull"));
 			foreach($receiverRemains as $remain)
 				$this->receiver->dropItem($remain);
 		}
 		$this->senderMenu->onClose($this->sender);
 		$this->receiverMenu->onClose($this->receiver);
 		$this->removeFrom();
-		$this->sender->sendMessage(PlayerTrade::$prefix . "The trade was successful.");
-		$this->receiver->sendMessage(PlayerTrade::$prefix . "The trade was successful.");
+		$this->sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.success"));
+		$this->receiver->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.success"));
+		(new TradeEndEvent($this->sender, $this->receiver, TradeEndEvent::REASON_SUCCESS))->call();
 	}
 
 	public function cancel(bool $offline = true, bool $causedBySender = false) : void{
 		$this->done = true;
+		$plugin = PlayerTrade::getInstance();
 		foreach(self::SENDER_SLOTS as $slot){
 			$item = $this->senderMenu->getInventory()->getItem($slot);
 			if(!$item->isNull()){
@@ -150,18 +163,22 @@ final class TradeQueue{
 		if($offline){
 			if($causedBySender){
 				$this->receiverMenu->onClose($this->receiver);
-				$this->receiver->sendMessage(PlayerTrade::$prefix . "Your trade was canceled because sender has left game.");
+				$this->receiver->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.cancel.senderLeft"));
 			}else{
 				$this->senderMenu->onClose($this->sender);
-				$this->sender->sendMessage(PlayerTrade::$prefix . "Your trade was canceled because receiver has left game.");
+				$this->sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("trade.cancel.receiverLeft"));
 			}
 		}else{
 			$this->senderMenu->onClose($this->sender);
 			$this->receiverMenu->onClose($this->receiver);
-			$message = "Your trade was canceled because " . ($causedBySender ? "sender" : "receiver") . " has canceled the trade";
+			$reason = $causedBySender ? "sender" : "receiver";
+			$message = $plugin->getLanguage()->translateString("trade.cancel", [
+				$reason
+			]);
 			$this->sender->sendMessage(PlayerTrade::$prefix . $message);
 			$this->receiver->sendMessage(PlayerTrade::$prefix . $message);
 		}
+		(new TradeEndEvent($this->sender, $this->receiver, $causedBySender ? ($offline ? TradeEndEvent::REASON_SENDER_QUIT : TradeEndEvent::REASON_RECEIVER_QUIT) : ($causedBySender ? TradeEndEvent::REASON_SENDER_CANCEL : TradeEndEvent::REASON_RECEIVER_CANCEL)));
 		$this->removeFrom();
 	}
 

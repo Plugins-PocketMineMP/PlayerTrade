@@ -8,9 +8,11 @@ use alvin0319\PlayerTrade\command\TradeCommand;
 use alvin0319\PlayerTrade\task\TradeCheckTask;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\lang\BaseLang;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\SingletonTrait;
+use function file_exists;
 use function spl_object_id;
 use function time;
 
@@ -26,6 +28,10 @@ final class PlayerTrade extends PluginBase implements Listener{
 
 	protected array $requests = [];
 
+	protected BaseLang $lang;
+
+	protected int $expireTime = 15;
+
 	public function onLoad() : void{ self::setInstance($this); }
 
 	public function onEnable() : void{
@@ -34,6 +40,25 @@ final class PlayerTrade extends PluginBase implements Listener{
 		$this->getScheduler()->scheduleRepeatingTask(new TradeCheckTask(), 20);
 
 		$this->getServer()->getCommandMap()->register("playertrade", new TradeCommand());
+
+		$this->saveDefaultConfig();
+
+		if(!file_exists($this->getDataFolder() . "lang/" . $this->getConfig()->get("lang", "eng") . ".ini") && $this->saveResource("lang/{$this->getConfig()->get("lang", "eng")}.ini")){
+			$this->getLogger()->alert("Language file not found... use english as default...");
+			$this->getConfig()->set("lang", "eng");
+		}
+
+		$this->saveResource($path = "lang/" . $this->getConfig()->get("lang", "eng"));
+
+		$this->lang = new BaseLang($this->getConfig()->get("lang", "eng"), $this->getDataFolder() . "lang/");
+
+		self::$prefix = $this->getConfig()->get("prefix", "§b§l[PlayerTrade] §r§7");
+
+		$this->expireTime = (int) $this->getConfig()->get("requestExpire", 15);
+	}
+
+	public function getLanguage() : BaseLang{
+		return $this->lang;
 	}
 
 	public function onDisable() : void{
@@ -70,7 +95,7 @@ final class PlayerTrade extends PluginBase implements Listener{
 	public function addRequest(Player $sender, Player $receiver) : void{
 		$this->requests[$sender->getName()] = [
 			"receiver" => $receiver->getName(),
-			"expireAt" => time() + 15
+			"expireAt" => time() + $this->expireTime
 		];
 	}
 
@@ -102,7 +127,9 @@ final class PlayerTrade extends PluginBase implements Listener{
 			if($requestData["receiver"] === $player->getName()){
 				$sender = $this->getServer()->getPlayerExact($senderName);
 				if($sender === null){
-					$player->sendMessage(PlayerTrade::$prefix . "You can't accept request from {$senderName} because sender has left game.");
+					$player->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.cannotAcceptRequest", [
+						$senderName
+						]));
 					break;
 				}
 				$found = true;
@@ -112,7 +139,7 @@ final class PlayerTrade extends PluginBase implements Listener{
 			}
 		}
 		if(!$found){
-			$player->sendMessage(PlayerTrade::$prefix . "You don't have any request.");
+			$player->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.noRequest"));
 		}
 	}
 
@@ -123,17 +150,21 @@ final class PlayerTrade extends PluginBase implements Listener{
 			$expireAt = $requestData["expireAt"];
 			if($sender === null || $receiver === null){
 				if($sender !== null){
-					$sender->sendMessage(PlayerTrade::$prefix . "Your request has canceled because receiver has left game.");
+					$sender->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.requestCanceled.receiverLeft"));
 				}
 				if($receiver !== null){
-					$receiver->sendMessage(PlayerTrade::$prefix . "Your request from {$senderName} has canceled because sender has left game.");
+					$receiver->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.requestCanceled.senderLeft", [
+						$senderName
+						]));
 				}
 				unset($this->requests[$senderName]);
 				continue;
 			}
 			if(time() > $expireAt){
-				$sender->sendMessage(PlayerTrade::$prefix . "Your trade request has expired.");
-				$receiver->sendMessage(PlayerTrade::$prefix . "Your trade request from {$senderName} has expired.");
+				$sender->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.requestExpired.sender"));
+				$receiver->sendMessage(PlayerTrade::$prefix . $this->getLanguage()->translateString("trade.requestExpired.receiver", [
+					$senderName
+					]));
 				unset($this->requests[$senderName]);
 				continue;
 			}

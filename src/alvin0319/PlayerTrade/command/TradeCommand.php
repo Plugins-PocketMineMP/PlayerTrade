@@ -25,8 +25,9 @@ final class TradeCommand extends PluginCommand{
 		if(!$this->testPermission($sender)){
 			return false;
 		}
+		$plugin = PlayerTrade::getInstance();
 		if(!$sender instanceof Player){
-			$sender->sendMessage(PlayerTrade::$prefix . "You can't use this command on console.");
+			$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.ingameOnly"));
 			return false;
 		}
 		if(count($args) < 2){
@@ -35,27 +36,35 @@ final class TradeCommand extends PluginCommand{
 		switch(array_shift($args)){
 			case "request":
 				if(PlayerTrade::getInstance()->hasRequest($sender)){
-					$sender->sendMessage(PlayerTrade::$prefix . "You already have a request!");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.alreadyHaveRequest"));
 					return false;
 				}
 				$player = $sender->getServer()->getPlayerExact(array_shift($args));
 				if($player === null){
-					$sender->sendMessage(PlayerTrade::$prefix . "This player is offline.");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
 					return false;
 				}
 				PlayerTrade::getInstance()->addRequest($sender, $player);
-				$sender->sendMessage(PlayerTrade::$prefix . "You requested trade to {$player->getName()}.");
-				$player->sendMessage(PlayerTrade::$prefix . "You received trade request from {$sender->getName()}");
-				$player->sendMessage(PlayerTrade::$prefix . "To accept, use /trade accept {$sender->getName()}");
+				$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.requestSuccess", [
+					$player->getName()
+					]));
+				$player->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.receiveRequest1", [
+					$sender->getName()
+					]));
+				$player->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.receiveRequest2", [
+					$sender->getName()
+					]));
 				break;
 			case "accept":
 				$player = $sender->getServer()->getPlayerExact(array_shift($args));
 				if($player === null){
-					$sender->sendMessage(PlayerTrade::$prefix . "This player is offline.");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
 					return false;
 				}
 				if(!PlayerTrade::getInstance()->hasRequestFrom($sender, $player)){
-					$sender->sendMessage(PlayerTrade::$prefix . "You don't have any request from {$player->getName()}.");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noAnyRequest", [
+						$player->getName()
+						]));
 					return false;
 				}
 				PlayerTrade::getInstance()->acceptRequest($sender);
@@ -63,16 +72,20 @@ final class TradeCommand extends PluginCommand{
 			case "deny":
 				$player = $sender->getServer()->getPlayerExact(array_shift($args));
 				if($player === null){
-					$sender->sendMessage(PlayerTrade::$prefix . "This player is offline.");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
 					return false;
 				}
 				if(!PlayerTrade::getInstance()->hasRequestFrom($sender, $player)){
-					$sender->sendMessage(PlayerTrade::$prefix . "You don't have any request from {$player->getName()}.");
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noAnyRequest", [
+						$player->getName()
+						]));
 					return false;
 				}
 				PlayerTrade::getInstance()->denyRequest($sender);
-				$sender->sendMessage(PlayerTrade::$prefix . "You denied request from {$player->getName()}");
-				$player->sendMessage(PlayerTrade::$prefix . "Your trade request has denied.");
+				$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.requestDeny", [
+					$player->getName()
+					]));
+				$player->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.requestDeny.sender"));
 				break;
 			default:
 				throw new InvalidCommandSyntaxException();

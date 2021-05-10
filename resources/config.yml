@@ -1,8 +1,9 @@
-# PlayerTrade Configuration file
-# You can modify this plugin's behavior on this config
-# This file is not automatically updated when the plugin was updated
-# You should update this file yourself when the plugin was updated
-# Thank you for using this plugin
+prefix: "§b§l[PlayerTrade] §r§7"
 
-# DO NOT MODIFY THIS
-config-version: 1
+# Available lang: eng
+# If you want to add your language, make a PR on https://github.com/alvin0319/PlayerTrade
+# Please add available lang on here if you are making PR for it.
+lang: eng
+
+# The expiration time for the trade request. (In seconds)
+requestExpire: 15
