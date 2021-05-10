@@ -1,7 +1,7 @@
 name: PlayerTrade
 author: alvin0319
 main: alvin0319\PlayerTrade\PlayerTrade
-version: 1.0.0
+version: 1.0.1
 api: 3.0.0
 description: A PocketMine-MP plugin that implements trade like PC server!
 
