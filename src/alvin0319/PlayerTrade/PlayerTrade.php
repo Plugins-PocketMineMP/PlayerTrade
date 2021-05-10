@@ -97,6 +97,7 @@ final class PlayerTrade extends PluginBase implements Listener{
 	}
 
 	public function acceptRequest(Player $player) : void{
+		$found = false;
 		foreach($this->requests as $senderName => $requestData){
 			if($requestData["receiver"] === $player->getName()){
 				$sender = $this->getServer()->getPlayerExact($senderName);
@@ -104,12 +105,15 @@ final class PlayerTrade extends PluginBase implements Listener{
 					$player->sendMessage(PlayerTrade::$prefix . "You can't accept request from {$senderName} because sender has left game.");
 					break;
 				}
+				$found = true;
 				$this->addToQueue($sender, $player);
 				unset($this->requests[$senderName]);
 				break;
 			}
 		}
-		$player->sendMessage(PlayerTrade::$prefix . "You don't have any request.");
+		if(!$found){
+			$player->sendMessage(PlayerTrade::$prefix . "You don't have any request.");
+		}
 	}
 
 	public function checkRequests() : void{

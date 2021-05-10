@@ -22,6 +22,5 @@ final class TradeQueueCheckTask extends Task{
 			$this->queue->cancel(true, true);
 			return;
 		}
-		$this->queue->check();
 	}
 }

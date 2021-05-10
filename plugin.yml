@@ -4,6 +4,9 @@ main: alvin0319\PlayerTrade\PlayerTrade
 version: 1.0.0
 api: 3.0.0
 
+extensions:
+  Core: ">=7.4"
+
 permissions:
   playertrade.command:
     description: Allows player to use /trade command
