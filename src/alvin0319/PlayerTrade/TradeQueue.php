@@ -51,7 +51,7 @@ final class TradeQueue{
 
 	protected bool $isReceiverDone = false;
 
-	protected TaskHandler $handler;
+	protected ?TaskHandler $handler = null;
 
 	public function __construct(Player $sender, Player $receiver){
 		$this->sender = $sender;
@@ -184,8 +184,9 @@ final class TradeQueue{
 
 	public function removeFrom() : void{
 		PlayerTrade::getInstance()->removeFromQueue($this);
-
-		$this->handler->cancel();
+		if($this->handler !== null){
+			$this->handler->cancel();
+		}
 	}
 
 	public function handleInventoryTransaction(InvMenuTransaction $action) : InvMenuTransactionResult{
