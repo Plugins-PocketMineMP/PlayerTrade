@@ -44,6 +44,12 @@ final class TradeCommand extends PluginCommand{
 					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
 					return false;
 				}
+				if($player->getName() === $sender->getName()){
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noSelf", [
+						"request trade"
+						]));
+					return false;
+				}
 				PlayerTrade::getInstance()->addRequest($sender, $player);
 				$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.requestSuccess", [
 					$player->getName()
@@ -61,6 +67,12 @@ final class TradeCommand extends PluginCommand{
 					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
 					return false;
 				}
+				if($sender->getName() === $player->getName()){
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noSelf", [
+						"accept request"
+						]));
+					return false;
+				}
 				if(!PlayerTrade::getInstance()->hasRequestFrom($sender, $player)){
 					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noAnyRequest", [
 						$player->getName()
@@ -73,6 +85,12 @@ final class TradeCommand extends PluginCommand{
 				$player = $sender->getServer()->getPlayerExact(array_shift($args));
 				if($player === null){
 					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.offlinePlayer"));
+					return false;
+				}
+				if($sender->getName() === $player->getName()){
+					$sender->sendMessage(PlayerTrade::$prefix . $plugin->getLanguage()->translateString("command.noSelf", [
+							"deny request"
+						]));
 					return false;
 				}
 				if(!PlayerTrade::getInstance()->hasRequestFrom($sender, $player)){
