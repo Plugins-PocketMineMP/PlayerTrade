@@ -6,6 +6,7 @@ namespace alvin0319\PlayerTrade;
 
 use alvin0319\PlayerTrade\command\TradeCommand;
 use alvin0319\PlayerTrade\task\TradeCheckTask;
+use muqsit\invmenu\InvMenuHandler;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\lang\BaseLang;
@@ -35,6 +36,7 @@ final class PlayerTrade extends PluginBase implements Listener{
 	public function onLoad() : void{ self::setInstance($this); }
 
 	public function onEnable() : void{
+		if(!InvMenuHandler::isRegistered()) InvMenuHandler::register($this);
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 
 		$this->getScheduler()->scheduleRepeatingTask(new TradeCheckTask(), 20);
